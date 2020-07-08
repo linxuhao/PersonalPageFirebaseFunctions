@@ -12,15 +12,33 @@ export const helloWorld = functions.https.onRequest((request, response) => {
 });
 
 export const addComment = functions.https.onRequest((request, response) => {
-    db.collection('comments').add({ comment: request.body.comment })
-    .then(() => response.send(request.body.comment)
-    ).catch(() => response.status(500).send('Error'));
+    const data = {
+        author: request.body.author,
+        comment: request.body.comment,
+        timestamp: Date.now()
+    };
+    db.collection('comments').add(data)
+        .then(() => response.send(data)
+        ).catch(() => response.status(500).send('Error'));
 });
 
 export const getComments = functions.https.onRequest((request, response) => {
     db.collection('comments').orderBy('timestamp').get()
-    .then((document) => {
-        response.send(document.docs);
-    }).catch(() => response.status(500).send('Error'));
+        .then((snapshot) => {
+            const data = snapshot.docs.map(doc => {
+                return { id: doc.id, ...doc.data() }
+            });
+            response.send(data);
+        }).catch(() => response.status(500).send('Error'));
+});
+
+export const getProjects = functions.https.onRequest((request, response) => {
+    db.collection('projects').orderBy('year', "desc").get()
+        .then((snapshot) => {
+            const data = snapshot.docs.map(doc => {
+                return { id: doc.id, ...doc.data() }
+            });
+            response.send(data);
+        }).catch(() => response.status(500).send('Error'));
 });
 
